@@ -1,0 +1,30 @@
+title: Remote Sensing Spectral Bands
+description: An interactive reference for satellite spectral bands, sensors, and Earth observation indices.
+baseurl: ""
+url: "https://thorniecodes.github.io"
+repository: thorniecodes/remotesensing-spectralbands
+
+remote_theme: just-the-docs/just-the-docs
+
+search_enabled: true
+nav_sort: case_insensitive
+
+aux_links:
+  "View on GitHub":
+    - "https://github.com/thorniecodes/remotesensing-spectralbands"
+aux_links_new_tab: true
+
+footer_content: "Built by <a href=\"https://github.com/thorniecodes\">thorniecodes</a>. Band data sourced from publicly available remote sensing documentation."
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-remote-theme
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/
+  - .git/
+  - .github/

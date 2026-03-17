@@ -1,0 +1,427 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .wrap { padding: 1rem 0 2rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .search-box { padding: 5px 10px; border-radius: 6px; border: 0.5px solid var(--color-border-secondary, #ccc); font-size: 12px; background: transparent; color: inherit; width: 200px; }
+  .export-btn { padding: 4px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary, #ccc); font-size: 11px; cursor: pointer; background: transparent; color: inherit; margin-left: auto; }
+  .export-btn:hover { background: #f0f0f0; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip { padding: 4px 10px; border-radius: 20px; border: 0.5px solid #ccc; font-size: 11px; cursor: pointer; background: transparent; color: #555; transition: all .15s; }
+  .chip.active { background: #e6f1fb; color: #185fa5; border-color: #378add; }
+  .chip.index-chip.active { background: #eaf3de; color: #3b6d11; border-color: #639922; }
+  .section-label { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: #999; padding: 12px 0 4px; border-top: 1px solid #eee; margin-top: 8px; }
+  .section-label:first-of-type { border-top: none; margin-top: 0; }
+  .hdr { display: grid; grid-template-columns: 12px 130px 90px 110px 110px 1fr 110px; gap: 0 10px; padding: 5px 8px; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: #999; margin-bottom: 2px; }
+  .row { display: grid; grid-template-columns: 12px 130px 90px 110px 110px 1fr 110px; gap: 0 10px; align-items: start; padding: 8px 8px; border-radius: 6px; cursor: default; transition: background .12s; }
+  .row:hover { background: #f7f7f7; }
+  .row.hidden { display: none; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
+  .bname { font-weight: 500; font-size: 13px; line-height: 1.3; }
+  .bname small { display: block; font-weight: 400; font-size: 11px; color: #999; margin-top: 1px; }
+  .range, .sensors-cell, .indices-cell { font-size: 12px; color: #666; line-height: 1.4; }
+  .app-cell { font-size: 12px; color: #666; line-height: 1.5; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin: 1px 2px 1px 0; font-weight: 500; }
+  .tag-ndvi { background: #eaf3de; color: #3b6d11; }
+  .tag-ndwi { background: #e6f1fb; color: #185fa5; }
+  .tag-ndbi { background: #faeeda; color: #854f0b; }
+  .tag-savi { background: #e1f5ee; color: #0f6e56; }
+  .tag-lst  { background: #faece7; color: #993c1d; }
+  .tag-nbr  { background: #fbeaf0; color: #993556; }
+  .tag-evi  { background: #eaf3de; color: #27500a; }
+  .tag-mndwi{ background: #e6f1fb; color: #0c447c; }
+  .tag-ndre { background: #f4c0d1; color: #72243e; }
+  .tag-ndsi { background: #dff0fb; color: #0e5f8a; }
+  .tag-ndmi { background: #e0f4f1; color: #00695c; }
+  .chip-sep { font-size: 11px; color: #ccc; padding: 4px 2px; align-self: center; user-select: none; }
+  .src-cell { font-size: 10px; line-height: 1.9; }
+  .tag-src { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin: 1px 2px 1px 0; font-weight: 500; text-decoration: none; cursor: pointer; }
+  .tag-src-usgs { background: #fef3e2; color: #7a4f28; }
+  .tag-src-esa  { background: #e6f1fb; color: #185fa5; }
+  .tag-src-nasa { background: #eaeef8; color: #1a3478; }
+  .tag-src-jaxa { background: #fce8e8; color: #8b1a1a; }
+  .tag-src-dlr  { background: #f0f0f0; color: #3a3a3a; }
+  .tag-src-asi  { background: #e8f5e8; color: #2d6a2d; }
+
+  /* Dark mode */
+  body.dark-mode .chip { color: #aaa; border-color: #555; }
+  body.dark-mode .chip.active { background: #0c447c; color: #b5d4f4; border-color: #378add; }
+  body.dark-mode .chip.index-chip.active { background: #27500a; color: #c0dd97; border-color: #639922; }
+  body.dark-mode .section-label { color: #666; border-color: #333; }
+  body.dark-mode .hdr { color: #666; }
+  body.dark-mode .row:hover { background: #1a1a1a; }
+  body.dark-mode .bname small { color: #666; }
+  body.dark-mode .range, body.dark-mode .sensors-cell, body.dark-mode .indices-cell, body.dark-mode .app-cell { color: #aaa; }
+  body.dark-mode .export-btn:hover { background: #222; }
+  body.dark-mode .tag-ndvi { background: #27500a; color: #c0dd97; }
+  body.dark-mode .tag-ndwi { background: #0c447c; color: #b5d4f4; }
+  body.dark-mode .tag-ndbi { background: #633806; color: #fac775; }
+  body.dark-mode .tag-savi { background: #085041; color: #9fe1cb; }
+  body.dark-mode .tag-lst  { background: #712b13; color: #f5c4b3; }
+  body.dark-mode .tag-nbr  { background: #72243e; color: #f4c0d1; }
+  body.dark-mode .tag-evi  { background: #173404; color: #97c459; }
+  body.dark-mode .tag-mndwi{ background: #042c53; color: #85b7eb; }
+  body.dark-mode .tag-ndre { background: #4b1528; color: #ed93b1; }
+  body.dark-mode .tag-ndsi { background: #083d5c; color: #8fd0ef; }
+  body.dark-mode .tag-ndmi { background: #003d35; color: #80cbc4; }
+  body.dark-mode .chip-sep { color: #444; }
+  body.dark-mode .tag-src-usgs { background: #4a2a0e; color: #f5c88a; }
+  body.dark-mode .tag-src-esa  { background: #0c447c; color: #b5d4f4; }
+  body.dark-mode .tag-src-nasa { background: #0a1f5c; color: #93aadd; }
+  body.dark-mode .tag-src-jaxa { background: #5c0000; color: #f5a0a0; }
+  body.dark-mode .tag-src-dlr  { background: #333;   color: #ccc;     }
+  body.dark-mode .tag-src-asi  { background: #1a4a1a; color: #90d090; }
+
+  @media (prefers-color-scheme: dark) {
+    body:not(.light-mode) .chip { color: #aaa; border-color: #555; }
+    body:not(.light-mode) .chip.active { background: #0c447c; color: #b5d4f4; border-color: #378add; }
+    body:not(.light-mode) .chip.index-chip.active { background: #27500a; color: #c0dd97; border-color: #639922; }
+    body:not(.light-mode) .section-label { color: #666; border-color: #333; }
+    body:not(.light-mode) .hdr { color: #666; }
+    body:not(.light-mode) .row:hover { background: #1a1a1a; }
+    body:not(.light-mode) .bname small { color: #666; }
+    body:not(.light-mode) .range, body:not(.light-mode) .sensors-cell, body:not(.light-mode) .indices-cell, body:not(.light-mode) .app-cell { color: #aaa; }
+    body:not(.light-mode) .tag-ndvi { background: #27500a; color: #c0dd97; }
+    body:not(.light-mode) .tag-ndwi { background: #0c447c; color: #b5d4f4; }
+    body:not(.light-mode) .tag-ndbi { background: #633806; color: #fac775; }
+    body:not(.light-mode) .tag-savi { background: #085041; color: #9fe1cb; }
+    body:not(.light-mode) .tag-lst  { background: #712b13; color: #f5c4b3; }
+    body:not(.light-mode) .tag-nbr  { background: #72243e; color: #f4c0d1; }
+    body:not(.light-mode) .tag-evi  { background: #173404; color: #97c459; }
+    body:not(.light-mode) .tag-mndwi{ background: #042c53; color: #85b7eb; }
+    body:not(.light-mode) .tag-ndre { background: #4b1528; color: #ed93b1; }
+    body:not(.light-mode) .tag-ndsi { background: #083d5c; color: #8fd0ef; }
+    body:not(.light-mode) .tag-ndmi { background: #003d35; color: #80cbc4; }
+    body:not(.light-mode) .chip-sep { color: #444; }
+    body:not(.light-mode) .tag-src-usgs { background: #4a2a0e; color: #f5c88a; }
+    body:not(.light-mode) .tag-src-esa  { background: #0c447c; color: #b5d4f4; }
+    body:not(.light-mode) .tag-src-nasa { background: #0a1f5c; color: #93aadd; }
+    body:not(.light-mode) .tag-src-jaxa { background: #5c0000; color: #f5a0a0; }
+    body:not(.light-mode) .tag-src-dlr  { background: #333;   color: #ccc;     }
+    body:not(.light-mode) .tag-src-asi  { background: #1a4a1a; color: #90d090; }
+  }
+</style>
+
+<div class="wrap" id="spectral-table">
+
+  <div class="controls">
+    <input class="search-box" type="text" id="band-search" placeholder="Search bands, sensors, indices...">
+    <button class="export-btn" id="export-csv">Export CSV</button>
+  </div>
+
+  <div class="filter-row" id="group-filters">
+    <button class="chip active" data-group="all">All bands</button>
+    <button class="chip" data-group="visible">Visible</button>
+    <button class="chip" data-group="nir">NIR</button>
+    <button class="chip" data-group="swir">SWIR</button>
+    <button class="chip" data-group="tir">Thermal</button>
+    <button class="chip" data-group="sar">SAR / Radar</button>
+    <button class="chip" data-group="hyperspectral">Hyperspectral</button>
+  </div>
+
+  <div class="filter-row" id="index-filters">
+    <button class="chip index-chip active" data-index="all">All indices</button>
+    <span class="chip-sep">·</span>
+    <button class="chip index-chip" data-index="ndvi">NDVI</button>
+    <button class="chip index-chip" data-index="evi">EVI</button>
+    <button class="chip index-chip" data-index="savi">SAVI</button>
+    <button class="chip index-chip" data-index="ndre">NDre</button>
+    <span class="chip-sep">·</span>
+    <button class="chip index-chip" data-index="ndwi">NDWI</button>
+    <button class="chip index-chip" data-index="mndwi">MNDWI</button>
+    <button class="chip index-chip" data-index="ndsi">NDSI</button>
+    <button class="chip index-chip" data-index="ndmi">NDMI</button>
+    <span class="chip-sep">·</span>
+    <button class="chip index-chip" data-index="ndbi">NDBI</button>
+    <button class="chip index-chip" data-index="nbr">NBR</button>
+    <span class="chip-sep">·</span>
+    <button class="chip index-chip" data-index="lst">LST</button>
+  </div>
+
+  <div class="hdr">
+    <span></span>
+    <span>Band</span>
+    <span>Wavelength</span>
+    <span>Key sensors</span>
+    <span>Spectral indices</span>
+    <span>Earth observation uses</span>
+    <span>Sources</span>
+  </div>
+
+  <div class="section-label" data-section="visible">Visible</div>
+
+  <div class="row" data-group="visible" data-indices="ndwi ndsi">
+    <div class="dot" style="background:#4e5de0"></div>
+    <div class="bname">Blue (B)<small>Landsat B2 · S2 B2</small></div>
+    <div class="range">0.45–0.52 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, MODIS, WorldView</div>
+    <div class="indices-cell"><span class="tag tag-ndwi">NDWI</span><span class="tag tag-ndsi">NDSI</span></div>
+    <div class="app-cell">Bathymetric mapping, aerosol/atmospheric correction, coastal water quality, sediment plumes, shallow water depth retrieval, snow/ice extent mapping</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="visible" data-indices="ndwi mndwi ndsi">
+    <div class="dot" style="background:#33a855"></div>
+    <div class="bname">Green (G)<small>Landsat B3 · S2 B3</small></div>
+    <div class="range">0.53–0.59 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, MODIS, SPOT</div>
+    <div class="indices-cell"><span class="tag tag-ndwi">NDWI</span><span class="tag tag-mndwi">MNDWI</span><span class="tag tag-ndsi">NDSI</span></div>
+    <div class="app-cell">Vegetation peak reflectance, water turbidity, algal bloom detection, open water body mapping (MNDWI numerator), snow/ice discrimination (NDSI numerator), tree canopy mapping</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="visible" data-indices="ndvi evi savi">
+    <div class="dot" style="background:#dd3322"></div>
+    <div class="bname">Red (R)<small>Landsat B4 · S2 B4</small></div>
+    <div class="range">0.64–0.68 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, MODIS, RapidEye</div>
+    <div class="indices-cell"><span class="tag tag-ndvi">NDVI</span><span class="tag tag-evi">EVI</span><span class="tag tag-savi">SAVI</span></div>
+    <div class="app-cell">Chlorophyll absorption, crop stress detection, land cover classification, burned area delineation</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="visible" data-indices="ndre">
+    <div class="dot" style="background:#cc3399"></div>
+    <div class="bname">Red edge 1<small>S2 B5 · RapidEye RE1</small></div>
+    <div class="range">0.697–0.711 µm</div>
+    <div class="sensors-cell">Sentinel-2, RapidEye, PlanetScope (SuperDove), Worldview-2/3</div>
+    <div class="indices-cell"><span class="tag tag-ndre">NDre</span></div>
+    <div class="app-cell">Most sensitive red edge band; chlorophyll concentration mapping, early crop stress and disease detection, plant physiological status assessment</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="visible" data-indices="ndre">
+    <div class="dot" style="background:#aa2288"></div>
+    <div class="bname">Red edge 2<small>S2 B6</small></div>
+    <div class="range">0.733–0.748 µm</div>
+    <div class="sensors-cell">Sentinel-2, Worldview-2/3</div>
+    <div class="indices-cell"><span class="tag tag-ndre">NDre</span></div>
+    <div class="app-cell">Canopy-level chlorophyll estimation, leaf area index (LAI) retrieval, crop yield modelling, forest health assessment</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="visible" data-indices="">
+    <div class="dot" style="background:#881177"></div>
+    <div class="bname">Red edge 3<small>S2 B7</small></div>
+    <div class="range">0.773–0.793 µm</div>
+    <div class="sensors-cell">Sentinel-2</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">NIR-like canopy reflectance; used in red-edge NDVI variants (RENDVI) to separate canopy structural effects from chlorophyll content</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="section-label" data-section="nir">Near-infrared (NIR)</div>
+
+  <div class="row" data-group="nir" data-indices="ndvi evi savi ndwi ndmi">
+    <div class="dot" style="background:#7a0080"></div>
+    <div class="bname">NIR<small>Landsat B5 · S2 B8</small></div>
+    <div class="range">Landsat B5: 0.85–0.88 µm<br>S2 B8: 0.774–0.892 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, MODIS, AVHRR</div>
+    <div class="indices-cell"><span class="tag tag-ndvi">NDVI</span><span class="tag tag-evi">EVI</span><span class="tag tag-savi">SAVI</span><span class="tag tag-ndwi">NDWI</span><span class="tag tag-ndmi">NDMI</span></div>
+    <div class="app-cell">Biomass estimation, LAI mapping, forest/crop delineation, urban greenspace, snow/ice mapping, vegetation moisture content (NDMI), land surface phenology monitoring</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="nir" data-indices="ndvi savi ndmi">
+    <div class="dot" style="background:#550055"></div>
+    <div class="bname">Narrow NIR<small>S2 B8A · MODIS B2</small></div>
+    <div class="range">S2 B8A: 0.855–0.875 µm<br>MODIS B2: 0.841–0.876 µm</div>
+    <div class="sensors-cell">Sentinel-2, MODIS, SPOT-6/7</div>
+    <div class="indices-cell"><span class="tag tag-ndvi">NDVI</span><span class="tag tag-savi">SAVI</span><span class="tag tag-ndmi">NDMI</span></div>
+    <div class="app-cell">Atmospherically more stable than the broad B8 due to its narrower bandwidth avoiding the 0.940 µm water vapour absorption feature; preferred for precision vegetation indices, red-edge transition zone analysis, and long-term time-series vegetation studies</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a><a class="tag tag-src tag-src-nasa" href="https://modis.gsfc.nasa.gov/about/specifications.php" target="_blank" rel="noopener">NASA</a></div>
+  </div>
+
+  <div class="section-label" data-section="swir">Shortwave infrared (SWIR)</div>
+
+  <div class="row" data-group="swir" data-indices="ndbi mndwi nbr ndsi ndmi">
+    <div class="dot" style="background:#8b4500"></div>
+    <div class="bname">SWIR-1<small>Landsat B6 · S2 B11</small></div>
+    <div class="range">Landsat B6: 1.57–1.65 µm<br>S2 B11: 1.57–1.66 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, MODIS, ASTER (SWIR non-operational since 2008)</div>
+    <div class="indices-cell"><span class="tag tag-ndbi">NDBI</span><span class="tag tag-mndwi">MNDWI</span><span class="tag tag-nbr">NBR</span><span class="tag tag-ndsi">NDSI</span><span class="tag tag-ndmi">NDMI</span></div>
+    <div class="app-cell">Soil moisture, snow vs cloud discrimination, geology/lithology mapping, urban built-up area, vegetation water content</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="swir" data-indices="ndbi nbr">
+    <div class="dot" style="background:#5a2800"></div>
+    <div class="bname">SWIR-2<small>Landsat B7 · S2 B12</small></div>
+    <div class="range">Landsat B7: 2.11–2.29 µm<br>S2 B12: 2.10–2.29 µm</div>
+    <div class="sensors-cell">Landsat 8/9, Sentinel-2, ASTER (SWIR non-operational since 2008), EO-1 Hyperion (legacy, decommissioned 2017)</div>
+    <div class="indices-cell"><span class="tag tag-ndbi">NDBI</span><span class="tag tag-nbr">NBR</span></div>
+    <div class="app-cell">Mineral mapping (clays, carbonates), burned area severity, drought stress, hydrothermal alteration zones</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s2-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="section-label" data-section="tir">Thermal infrared (TIR)</div>
+
+  <div class="row" data-group="tir" data-indices="lst">
+    <div class="dot" style="background:#cc3300"></div>
+    <div class="bname">TIR-1<small>Landsat B10 · MODIS B31</small></div>
+    <div class="range">10.60–11.19 µm</div>
+    <div class="sensors-cell">Landsat 8/9 TIRS, MODIS B31, AVHRR B4, ASTER B13/B14 (partial overlap: B13 covers 10.25–10.95 µm, B14 covers 10.95–11.65 µm)</div>
+    <div class="indices-cell"><span class="tag tag-lst">LST</span></div>
+    <div class="app-cell">Land surface temperature, urban heat island analysis, wildfire hotspots, geothermal activity, evapotranspiration modelling</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-nasa" href="https://modis.gsfc.nasa.gov/about/specifications.php" target="_blank" rel="noopener">NASA</a></div>
+  </div>
+
+  <div class="row" data-group="tir" data-indices="lst">
+    <div class="dot" style="background:#991a00"></div>
+    <div class="bname">TIR-2<small>Landsat B11 · MODIS B32</small></div>
+    <div class="range">11.50–12.51 µm</div>
+    <div class="sensors-cell">Landsat 8/9 TIRS, MODIS B32, NOAA AVHRR B5</div>
+    <div class="indices-cell"><span class="tag tag-lst">LST</span></div>
+    <div class="app-cell">Split-window LST retrieval, sea surface temperature (SST), volcanic monitoring</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a><a class="tag tag-src tag-src-nasa" href="https://modis.gsfc.nasa.gov/about/specifications.php" target="_blank" rel="noopener">NASA</a></div>
+  </div>
+
+  <div class="section-label" data-section="sar">SAR / Radar</div>
+
+  <div class="row" data-group="sar" data-indices="">
+    <div class="dot" style="background:#1a5fa5"></div>
+    <div class="bname">C-band SAR<small>Sentinel-1 · RADARSAT-2</small></div>
+    <div class="range">5.405 GHz (~5.55 cm)</div>
+    <div class="sensors-cell">Sentinel-1A/1C/1D, RADARSAT-2; legacy: ERS-1/2 (decommissioned 2011), ENVISAT (2012). Polarisation: VV+VH or HH+HV (dual-pol), single-pol HH or VV</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">Flood mapping (all-weather), sea ice extent and type, ship detection, InSAR surface deformation, crop monitoring, soil moisture retrieval</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-esa" href="https://sentiwiki.copernicus.eu/web/s1-mission" target="_blank" rel="noopener">ESA</a></div>
+  </div>
+
+  <div class="row" data-group="sar" data-indices="">
+    <div class="dot" style="background:#0a3d7a"></div>
+    <div class="bname">L-band SAR<small>ALOS-2 PALSAR-2 · NISAR</small></div>
+    <div class="range">~1.26 GHz (~23.6 cm)</div>
+    <div class="sensors-cell">ALOS-2 PALSAR-2 (1.2575 GHz), NISAR (launched July 2025, L-band 24 cm); legacy: JERS-1 (decommissioned 1998). Polarisation: HH+HV, quad-pol (ALOS-2); full quad-pol (NISAR)</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">Forest biomass / AGB estimation, canopy and soil penetration, ground deformation (InSAR), tropical forest mapping, geological fault mapping</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-jaxa" href="https://www.eorc.jaxa.jp/ALOS-2/en/about/palsar2.htm" target="_blank" rel="noopener">JAXA</a><a class="tag tag-src tag-src-nasa" href="https://science.nasa.gov/mission/nisar/mission-overview/" target="_blank" rel="noopener">NASA</a></div>
+  </div>
+
+  <div class="row" data-group="sar" data-indices="">
+    <div class="dot" style="background:#042c53"></div>
+    <div class="bname">X-band SAR<small>TerraSAR-X · Cosmo-SkyMed</small></div>
+    <div class="range">9.65 GHz (~3.1 cm)</div>
+    <div class="sensors-cell">TerraSAR-X, TanDEM-X, Cosmo-SkyMed, Kompsat-5. Polarisation: HH, VV, or dual HH+VV</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">High-resolution urban mapping, DEM generation (TanDEM-X global DEM), infrastructure monitoring, glacier velocity mapping</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-dlr" href="https://www.dlr.de/en/eoc/research-transfer/topics/missions/terrasar-x" target="_blank" rel="noopener">DLR</a></div>
+  </div>
+
+  <div class="section-label" data-section="hyperspectral">Hyperspectral / special</div>
+
+  <div class="row" data-group="hyperspectral" data-indices="ndvi evi savi ndwi ndre">
+    <div class="dot" style="background:#2a5a00"></div>
+    <div class="bname">Hyperspectral VNIR<small>PRISMA · DESIS · EMIT</small></div>
+    <div class="range">~0.381–1.010 µm (sensor-dependent)</div>
+    <div class="sensors-cell">EMIT (ISS): 0.381–2.493 µm, 285 bands total · EnMAP: 0.420–2.450 µm, 95 VNIR bands · PRISMA: 0.400–2.505 µm, 66 VNIR bands · DESIS (ISS): 0.402–1.000 µm, 235 bands (VNIR only). Note: EMIT, EnMAP and PRISMA cover full VNIR+SWIR continuously</div>
+    <div class="indices-cell"><span class="tag tag-ndvi">All veg. indices</span></div>
+    <div class="app-cell">Species-level vegetation mapping, chlorophyll and canopy biochemistry retrieval, precision agriculture, inland water quality, spectral unmixing for land cover</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-nasa" href="https://earth.jpl.nasa.gov/emit/instrument/specifications/" target="_blank" rel="noopener">NASA</a><a class="tag tag-src tag-src-dlr" href="https://www.enmap.org/mission/" target="_blank" rel="noopener">DLR</a><a class="tag tag-src tag-src-asi" href="https://www.asi.it/en/earth-science/prisma/" target="_blank" rel="noopener">ASI</a></div>
+  </div>
+
+  <div class="row" data-group="hyperspectral" data-indices="">
+    <div class="dot" style="background:#3b0a3b"></div>
+    <div class="bname">Hyperspectral SWIR<small>EMIT · EnMAP · PRISMA</small></div>
+    <div class="range">~0.900–2.505 µm (sensor-dependent)</div>
+    <div class="sensors-cell">EMIT (ISS): 0.381–2.493 µm continuous · EnMAP: 0.900–2.450 µm, 135 SWIR bands · PRISMA: 0.920–2.505 µm, 173 SWIR bands · EO-1 Hyperion (legacy, decommissioned 2017)</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">Mineral identification (clay minerals, carbonates, iron oxides), hydrocarbon seep detection, methane and CO₂ point-source mapping, aeolian dust provenance, hydrothermal alteration mapping</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-nasa" href="https://earth.jpl.nasa.gov/emit/instrument/specifications/" target="_blank" rel="noopener">NASA</a><a class="tag tag-src tag-src-dlr" href="https://www.enmap.org/mission/" target="_blank" rel="noopener">DLR</a><a class="tag tag-src tag-src-asi" href="https://www.asi.it/en/earth-science/prisma/" target="_blank" rel="noopener">ASI</a></div>
+  </div>
+
+  <div class="row" data-group="hyperspectral" data-indices="">
+    <div class="dot" style="background:#554400"></div>
+    <div class="bname">Panchromatic<small>Landsat B8 · SPOT Pan</small></div>
+    <div class="range">Landsat B8: 0.50–0.68 µm<br>Commercial: 0.45–0.80 µm</div>
+    <div class="sensors-cell">Landsat 8/9 (0.50–0.68 µm), SPOT-6/7, Pleiades (0.47–0.83 µm), WorldView, GeoEye</div>
+    <div class="indices-cell">—</div>
+    <div class="app-cell">Pan-sharpening multispectral imagery to improve spatial resolution, high-resolution base mapping, urban change detection, road and building extraction</div>
+    <div class="src-cell"><a class="tag tag-src tag-src-usgs" href="https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites" target="_blank" rel="noopener">USGS</a></div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const rows = document.querySelectorAll('#spectral-table .row[data-group]');
+  const sections = document.querySelectorAll('#spectral-table .section-label[data-section]');
+  const groupChips = document.querySelectorAll('#group-filters .chip');
+  const indexChips = document.querySelectorAll('#index-filters .chip');
+  const searchInput = document.getElementById('band-search');
+  const exportBtn = document.getElementById('export-csv');
+
+  let activeGroup = 'all';
+  let activeIndex = 'all';
+  let searchTerm = '';
+
+  const sectionGroupMap = {
+    visible: 'visible', nir: 'nir', swir: 'swir',
+    tir: 'tir', sar: 'sar', hyperspectral: 'hyperspectral'
+  };
+
+  function applyFilters() {
+    rows.forEach(row => {
+      const groupMatch = activeGroup === 'all' || row.dataset.group === activeGroup;
+      const indexMatch = activeIndex === 'all' || (row.dataset.indices || '').split(' ').includes(activeIndex);
+      const text = row.innerText.toLowerCase();
+      const searchMatch = !searchTerm || text.includes(searchTerm);
+      row.classList.toggle('hidden', !(groupMatch && indexMatch && searchMatch));
+    });
+    sections.forEach(s => {
+      const sg = sectionGroupMap[s.dataset.section];
+      const groupOk = activeGroup === 'all' || activeGroup === sg;
+      const anyVisible = Array.from(rows).some(r =>
+        r.dataset.group === sg && !r.classList.contains('hidden')
+      );
+      s.style.display = (groupOk && anyVisible) ? '' : 'none';
+    });
+  }
+
+  groupChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      groupChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeGroup = chip.dataset.group;
+      applyFilters();
+    });
+  });
+
+  indexChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      indexChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeIndex = chip.dataset.index;
+      applyFilters();
+    });
+  });
+
+  searchInput.addEventListener('input', () => {
+    searchTerm = searchInput.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  exportBtn.addEventListener('click', () => {
+    const headers = ['Band', 'Wavelength', 'Key sensors', 'Spectral indices', 'Applications'];
+    const visibleRows = Array.from(rows).filter(r => !r.classList.contains('hidden'));
+    const csvRows = visibleRows.map(row => {
+      const cells = row.querySelectorAll('.bname, .range, .sensors-cell, .indices-cell, .app-cell');
+      return Array.from(cells).map(c => `"${c.innerText.replace(/\n/g, ' ').replace(/"/g, '""')}"`).join(',');
+    });
+    const csv = [headers.join(','), ...csvRows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'spectral-bands-rs.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Dark mode toggle — looks for a #dark-toggle button anywhere on the page
+  const darkToggle = document.getElementById('dark-toggle');
+  if (darkToggle) {
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      document.body.classList.toggle('light-mode');
+    });
+  }
+})();
+</script>

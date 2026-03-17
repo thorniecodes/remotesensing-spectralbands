@@ -1,0 +1,48 @@
+<style>
+  #dark-toggle {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--color-border-secondary, #ccc);
+    background: var(--color-background, #fff);
+    color: var(--color-text, #333);
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  #dark-toggle:hover {
+    background: #ebebeb;
+  }
+  body.dark-mode #dark-toggle {
+    background: #1e1e1e;
+    color: #ddd;
+    border-color: #555;
+  }
+  body.dark-mode #dark-toggle:hover {
+    background: #2a2a2a;
+  }
+  /* Persist dark mode across just-the-docs base styles */
+  body.dark-mode {
+    background: #121212 !important;
+    color: #ddd !important;
+  }
+  body.dark-mode .site-header,
+  body.dark-mode .side-bar,
+  body.dark-mode .main-content-wrap {
+    background: #1a1a1a !important;
+    border-color: #333 !important;
+  }
+  body.dark-mode .site-title {
+    color: #ddd !important;
+  }
+  body.dark-mode .main-content h1,
+  body.dark-mode .main-content h2,
+  body.dark-mode .main-content h3,
+  body.dark-mode .main-content p {
+    color: #ccc !important;
+  }
+</style>

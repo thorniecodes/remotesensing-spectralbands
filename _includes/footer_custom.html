@@ -1,0 +1,23 @@
+<button id="dark-toggle" aria-label="Toggle dark mode">Dark mode</button>
+
+<script>
+(function () {
+  var btn = document.getElementById('dark-toggle');
+  var stored = localStorage.getItem('rs-color-scheme');
+
+  if (stored === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.body.classList.remove('light-mode');
+    if (btn) btn.textContent = 'Light mode';
+  }
+
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var isDark = document.body.classList.toggle('dark-mode');
+      document.body.classList.toggle('light-mode', !isDark);
+      localStorage.setItem('rs-color-scheme', isDark ? 'dark' : 'light');
+      btn.textContent = isDark ? 'Light mode' : 'Dark mode';
+    });
+  }
+})();
+</script>
