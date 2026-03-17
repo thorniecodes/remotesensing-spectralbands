@@ -1,6 +1,6 @@
 title: Remote Sensing Spectral Bands
 description: An interactive reference for satellite spectral bands, sensors, and Earth observation indices.
-baseurl: ""
+baseurl: "/remotesensing-spectralbands"
 url: "https://thorniecodes.github.io"
 repository: thorniecodes/remotesensing-spectralbands
 
