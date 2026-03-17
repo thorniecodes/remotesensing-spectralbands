@@ -1,8 +1,8 @@
 <style>
   #dark-toggle {
     position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
+    bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+    right: max(1.5rem, env(safe-area-inset-right, 1.5rem));
     z-index: 1000;
     padding: 0.4rem 1rem;
     border-radius: 20px;
